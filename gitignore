@@ -1,12 +1,5 @@
-# Database files
 *.json
-
-# Python cache
 __pycache__/
-*.pyc
-
-# Environment variables
 .env
-
-# OS files
+*.pyc
 .DS_Store
