@@ -34,7 +34,7 @@ APPROVER_ROLE_ID = 1366040463122890843
 async def on_ready():
     print(f"✅ {update_bot.user} is online")
     # Initialize DB if empty
-    db = load_db()
+    db = load_db()  # Add this line
     if 'versions' not in db:
         db['versions'] = {}
         save_db(db)
