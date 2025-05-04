@@ -119,7 +119,28 @@ async def on_message(message):
 
     save_db(db)
     await level_bot.process_commands(message)
-
+@level_bot.command(name="rank")
+async def rank(ctx, member: discord.Member = None):
+    member = member or ctx.author
+    db = load_db()
+    user_id = str(member.id)
+    
+    if user_id not in db['users']:
+        await ctx.send(f"{member.display_name} hasn't earned any XP yet!")
+        return
+        
+    words = db['users'][user_id]["words"]
+    level = db['users'][user_id]["level"]
+    
+    embed = discord.Embed(
+        title=f"{member.display_name}'s Rank",
+        color=0x00ff00
+    )
+    embed.add_field(name="Level", value=level, inline=True)
+    embed.add_field(name="Total Words", value=words, inline=True)
+    embed.set_thumbnail(url=member.avatar.url if member.avatar else None)
+    
+    await ctx.send(embed=embed)
 # [Rest of your commands (help, rank, rank_reset, xp_add, leaderboard) remain the same, 
 # just replace db with load_db()/save_db(db) where needed]
 
