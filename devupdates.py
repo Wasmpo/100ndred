@@ -2,7 +2,23 @@ import discord
 from discord.ext import commands
 from datetime import datetime
 import os
-from replit import db
+import json
+
+DB_FILE = "updates_data.json"
+
+def load_db():
+    try:
+        with open(DB_FILE) as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {'versions': {}}
+
+def save_db(data):
+    with open(DB_FILE, 'w') as f:
+        json.dump(data, f, indent=2)
+
+# [Rest of your devupdates.py code remains the same, 
+# just replace all db references with load_db()/save_db(db)]
 
 # Configuration
 intents = discord.Intents.default()
