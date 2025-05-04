@@ -1,10 +1,11 @@
 import os
 import subprocess
+import time
 
-# Start both bots and let them run forever
+# Start both bots
 subprocess.Popen(["python", "levelbot.py"])
 subprocess.Popen(["python", "devupdates.py"])
 
 # Keep the container alive
 while True:
-    pass
+    time.sleep(60)
