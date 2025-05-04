@@ -27,8 +27,8 @@ update_bot = commands.Bot(command_prefix="^", intents=intents, help_command=None
 
 # Constants
 ANNOUNCEMENT_CHANNEL_ID = 1368311044904190052
-DEVELOPER_ROLE_ID = 1366040463122890843
-APPROVER_ROLE_ID = 1366040463122890843
+DEVELOPER_ROLE_ID = 1366040463122890843  # Role ID for developers
+APPROVER_ROLE_ID = 1366040463122890843   # Same role for approval
 
 @update_bot.event
 async def on_ready():
@@ -56,7 +56,7 @@ def create_update_embed(version: str, notes: str, author: discord.Member, approv
 @update_bot.command()
 @commands.has_role(DEVELOPER_ROLE_ID)
 async def todays_update(ctx):
-    """Post today's development update"""
+    """Post today's development update (Developer only)"""
     embed = discord.Embed(
         title="🛠️ Development Update",
         color=0x1abc9c,
@@ -71,13 +71,14 @@ async def todays_update(ctx):
     )
     
     channel = update_bot.get_channel(ANNOUNCEMENT_CHANNEL_ID)
-    await channel.send(embed=embed)
-    await ctx.send("✅ Today's update posted!", delete_after=10)
+    if channel:
+        await channel.send(embed=embed)
+        await ctx.send("✅ Today's update posted!", delete_after=10)
 
 @update_bot.command(name="devupdate", help="Submit a new update. Usage: ^devupdate [version] [notes]")
 @commands.has_role(DEVELOPER_ROLE_ID)
 async def devupdate(ctx, version: str, *, notes: str):
-    """Submit a new update for approval"""
+    """Submit a new update for approval (Developer only)"""
     db = load_db()
     db['versions'][version] = {
         'date': datetime.now().isoformat(),
@@ -96,20 +97,9 @@ async def devupdate(ctx, version: str, *, notes: str):
         await msg.add_reaction("❌")
         await ctx.send(f"📝 Update v{version} submitted!", delete_after=10)
 
-@devupdate.error
-async def devupdate_error(ctx, error):
-    if isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send("❌ Missing arguments! Usage: `^devupdate [version] [notes]`", delete_after=10)
-    elif isinstance(error, commands.MissingRole):
-        role = ctx.guild.get_role(DEVELOPER_ROLE_ID)
-        await ctx.send(
-            f"❌ You need the {role.name if role else 'Developer'} role to use this command!",
-            delete_after=10
-        )
-
-@update_bot.command()
+@update_bot.command(name="updates")
 async def updates(ctx):
-    """Show version history"""
+    """Show version history (Available to everyone)"""
     db = load_db()
     if not db['versions']:
         return await ctx.send("No updates yet.", delete_after=10)
@@ -127,16 +117,30 @@ async def updates(ctx):
     await ctx.send(embed=embed)
 
 @update_bot.command(name="help")
+@commands.has_role(DEVELOPER_ROLE_ID)  # Restrict help to developers only
 async def bot_help(ctx):
-    """Show available commands"""
+    """Show available commands (Developer only)"""
     help_text = """
-    **Developer Bot Commands:**
+    **Developer Commands (Restricted):**
     `^devupdate [version] [notes]` - Submit new update
     `^todays_update` - Post today's dev update
+    
+    **Public Commands:**
     `^updates` - Show version history
-    `^help` - Show this message
     """
     await ctx.send(help_text)
+
+@devupdate.error
+async def devupdate_error(ctx, error):
+    if isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send("❌ Missing arguments! Usage: `^devupdate [version] [notes]`", delete_after=10)
+    elif isinstance(error, commands.MissingRole):
+        await ctx.send("❌ You need the Developer role to use this command!", delete_after=10)
+
+@bot_help.error
+async def help_error(ctx, error):
+    if isinstance(error, commands.MissingRole):
+        await ctx.send("❌ You need the Developer role to view these commands!", delete_after=10)
 
 if __name__ == "__main__":
     update_bot.run(os.getenv('ANNOUNCE_TOKEN'))
