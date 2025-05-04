@@ -92,32 +92,30 @@ async def on_message(message):
 
     words = len(message.content.split())
     db['users'][user_id]["words"] += words
+    save_db(db)  # Save after each message
 
     current_level = db['users'][user_id]["level"]
-    new_level = 0
-
-    for level, req in sorted(LEVELS.items(), reverse=True):
-        if db['users'][user_id]["words"] >= req:
-            new_level = level
-            break
+    new_level = max([lvl for lvl, req in LEVELS.items() if db['users'][user_id]["words"] >= req], default=0)
 
     if new_level > current_level:
         db['users'][user_id]["level"] = new_level
+        save_db(db)  # Save again after level up
+        
+        # Remove old role
         if current_level > 0:
-            old_role = discord.utils.get(message.guild.roles,
-                                     name=f"🏆・𝐋𝐞𝐯𝐞𝐥 {current_level}")
-            if old_role and old_role in message.author.roles:
+            old_role = discord.utils.get(message.guild.roles, name=f"🏆・𝐋𝐞𝐯𝐞𝐥 {current_level}")
+            if old_role:
                 await message.author.remove_roles(old_role)
-
-        new_role = discord.utils.get(message.guild.roles,
-                                   name=f"🏆・𝐋𝐞𝐯𝐞𝐥 {new_level}")
+        
+        # Add new role
+        new_role = discord.utils.get(message.guild.roles, name=f"🏆・𝐋𝐞𝐯𝐞𝐥 {new_level}")
         if new_role:
             await message.author.add_roles(new_role)
             await message.channel.send(
                 f"🎉 {message.author.mention} reached Level {new_level}!",
-                delete_after=10)
+                delete_after=10
+            )
 
-    save_db(db)
     await level_bot.process_commands(message)
 
 # --- COMMANDS ---
