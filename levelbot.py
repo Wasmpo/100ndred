@@ -142,30 +142,25 @@ async def help(ctx):
     await ctx.send(embed=embed)
 
 @level_bot.command()
-@commands.cooldown(1, 10, commands.BucketType.user)
+@commands.cooldown(1, 10, commands.BucketType.user)  # 10-second cooldown
 async def rank(ctx, member: discord.Member = None):
-    """Check level progress"""
     target = member or ctx.author
     user_id = str(target.id)
     db = load_db()
-
+    
     if user_id not in db['users']:
-        return await ctx.send(f"{target.mention} hasn't earned XP yet!",
-                            delete_after=10)
-
+        return await ctx.send(f"{target.mention} hasn't earned XP yet!", delete_after=10)
+    
     data = db['users'][user_id]
     next_lvl = data['level'] + 1
     req_xp = LEVELS.get(next_lvl, "MAX")
-
-    embed = discord.Embed(title=f"🏆 {target.display_name}'s Rank",
-                        color=0x3498db)
+    
+    embed = discord.Embed(title=f"🏆 {target.display_name}'s Rank", color=0x3498db)
     embed.add_field(name="Level", value=data['level'], inline=True)
     embed.add_field(name="Total Words", value=data['words'], inline=True)
-    embed.add_field(name="Progress",
-                    value=f"{data['words']}/{req_xp}",
-                    inline=False)
+    embed.add_field(name="Progress", value=f"{data['words']}/{req_xp}", inline=False)
     embed.set_thumbnail(url=target.avatar.url if target.avatar else None)
-
+    
     await ctx.send(embed=embed, delete_after=20)
 
 @level_bot.command()
