@@ -20,7 +20,7 @@ def save_db(data):
 
 # Initialize bot with disabled default help command
 intents = discord.Intents.all()
-bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
+bot = commands.Bot(command_prefix=">", intents=intents, help_command=None)
 
 # ===== CONFIGURATION =====
 APPLICATION_ID = 1362388618978660595
